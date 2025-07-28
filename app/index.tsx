@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import { Text, Dialog, Portal, Button, useTheme } from 'react-native-paper';
 import { Stack } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Simple duration formatting
 function formatDuration(ms: number) {
@@ -18,12 +19,29 @@ function formatDuration(ms: number) {
 }
 
 export default function Index() {
-  const [startTime, setStartTime] = useState(new Date());
+  const [startTime, setStartTime] = useState<Date | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [dialogVisible, setDialogVisible] = useState(false);
   const theme = useTheme();
 
   useEffect(() => {
+    const loadStartTime = async () => {
+      const storedStartTime = await AsyncStorage.getItem('startTime');
+      if (storedStartTime) {
+        setStartTime(new Date(parseInt(storedStartTime, 10)));
+      } else {
+        const now = new Date();
+        setStartTime(now);
+        await AsyncStorage.setItem('startTime', now.getTime().toString());
+      }
+    };
+
+    loadStartTime();
+  }, []);
+
+  useEffect(() => {
+    if (!startTime) return;
+
     const timer = setInterval(() => {
       setElapsedTime(new Date().getTime() - startTime.getTime());
     }, 1000);
@@ -34,8 +52,10 @@ export default function Index() {
   const showDialog = () => setDialogVisible(true);
   const hideDialog = () => setDialogVisible(false);
 
-  const handleReset = () => {
-    setStartTime(new Date());
+  const handleReset = async () => {
+    const now = new Date();
+    setStartTime(now);
+    await AsyncStorage.setItem('startTime', now.getTime().toString());
     hideDialog();
   };
 
