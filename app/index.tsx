@@ -28,7 +28,9 @@ export default function Index() {
     const loadStartTime = async () => {
       const storedStartTime = await AsyncStorage.getItem('startTime');
       if (storedStartTime) {
-        setStartTime(new Date(parseInt(storedStartTime, 10)));
+        const loadedStartTime = new Date(parseInt(storedStartTime, 10));
+        setStartTime(loadedStartTime);
+        setElapsedTime(new Date().getTime() - loadedStartTime.getTime());
       } else {
         const now = new Date();
         setStartTime(now);
